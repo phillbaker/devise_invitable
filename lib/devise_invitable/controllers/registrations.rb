@@ -8,7 +8,12 @@ module DeviseInvitable::Controllers::Registrations
   def destroy_if_previously_invited
     hash = params[resource_name]
     if hash && hash[:email]
-      resource = resource_class.where(:email => hash[:email], :encrypted_password => '').first
+      conditions = {:email => hash[:email], :encrypted_password => ''}
+      if(resource_class.respond_to?(:where)) # ActiveRecord, Mongoid
+        resource = resource_class.where(conditions).first
+      else
+        resource = resource_class.first(conditions)
+      end
       if resource
         @invitation_info = Hash[resource.invitation_fields.map {|field|
           [field, resource.send(field)]

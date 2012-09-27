@@ -38,17 +38,22 @@ module Devise
         define_callbacks :invitation_accepted
 
         attr_writer :skip_password
-
-        scope :invitation_not_accepted, lambda { where(:invitation_accepted_at => nil) }
-        if defined?(Mongoid) && self < Mongoid::Document
-          scope :invitation_accepted, lambda { where(:invitation_accepted_at.ne => nil) }
-        else
-          scope :invitation_accepted, lambda { where(arel_table[:invitation_accepted_at].not_eq(nil)) }
-
-          [:before_invitation_accepted, :after_invitation_accepted].each do |callback_method|
-            send callback_method do
-              notify_observers callback_method
-            end
+        
+        if defined?(DataMapper)
+          scope :invitation_not_accepted, lambda { all(:invitation_accepted_at => nil) }
+          scope :invitation_accepted, lambda { all(:invitation_accepted_at.not => nil) }
+        else #ActiveRecord or Mongoid
+          scope :invitation_not_accepted, lambda { where(:invitation_accepted_at => nil) }
+          if defined?(Mongoid) && self < Mongoid::Document
+            scope :invitation_accepted, lambda { where(:invitation_accepted_at.ne => nil) }
+          else
+            scope :invitation_accepted, lambda { where(arel_table[:invitation_accepted_at].not_eq(nil)) }
+          end
+        end
+        
+        [:before_invitation_accepted, :after_invitation_accepted].each do |callback_method|
+          send callback_method do
+            notify_observers callback_method
           end
         end
       end
