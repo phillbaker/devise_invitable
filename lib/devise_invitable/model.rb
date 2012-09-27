@@ -40,8 +40,8 @@ module Devise
         attr_writer :skip_password
         
         if defined?(DataMapper)
-          scope :invitation_not_accepted, lambda { all(:invitation_accepted_at => nil) }
-          scope :invitation_accepted, lambda { all(:invitation_accepted_at.not => nil) }
+          def self.invitation_not_accepted; all(:invitation_accepted_at => nil); end
+          def self.invitation_accepted; all(:invitation_accepted_at.not => nil); end
         else #ActiveRecord or Mongoid
           scope :invitation_not_accepted, lambda { where(:invitation_accepted_at => nil) }
           if defined?(Mongoid) && self < Mongoid::Document
