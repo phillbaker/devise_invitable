@@ -28,7 +28,9 @@ module Devise
 
       included do
         include ::DeviseInvitable::Inviter
-        if Devise.invited_by_class_name
+        if defined?(DataMapper)
+          # No-op for now
+        elsif Devise.invited_by_class_name
           belongs_to :invited_by, :class_name => Devise.invited_by_class_name
         else
           belongs_to :invited_by, :polymorphic => true
