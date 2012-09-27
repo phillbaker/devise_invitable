@@ -50,14 +50,15 @@ module Devise
             scope :invitation_accepted, lambda { where(:invitation_accepted_at.ne => nil) }
           else
             scope :invitation_accepted, lambda { where(arel_table[:invitation_accepted_at].not_eq(nil)) }
+            
+            [:before_invitation_accepted, :after_invitation_accepted].each do |callback_method|
+              send callback_method do
+                notify_observers callback_method
+              end
+            end
           end
         end
         
-        [:before_invitation_accepted, :after_invitation_accepted].each do |callback_method|
-          send callback_method do
-            notify_observers callback_method
-          end
-        end
       end
 
       def self.required_fields(klass)
