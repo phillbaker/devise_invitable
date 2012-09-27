@@ -33,7 +33,13 @@ module DeviseInvitable::Controllers::Registrations
   def reset_invitation_info
     # Restore info about the last invitation (for later reference)
     # Reset the invitation_info only, if invited_by_id is still nil at this stage:
-    resource = resource_class.where(:email => params[resource_name][:email], :invited_by_id => nil).first
+    
+    conditions = {:email => params[resource_name][:email], :invited_by_id => nil}
+    if(resource_class.respond_to?(:where)) # ActiveRecord, Mongoid
+      resource = resource_class.where(conditions).first
+    else
+      resource = resource_class.first(conditions)
+    end
     if resource && @invitation_info
       resource.invitation_fields.each do |field|
         resource.send("#{field}=", @invitation_info[field])
