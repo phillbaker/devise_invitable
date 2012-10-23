@@ -29,7 +29,7 @@ module Devise
       included do
         include ::DeviseInvitable::Inviter
         if defined?(DataMapper)
-          # No-op for now
+          # No-op #TODO put in STI for Inviter tracking
         elsif Devise.invited_by_class_name
           belongs_to :invited_by, :class_name => Devise.invited_by_class_name
         else
@@ -232,10 +232,12 @@ module Devise
           invitable = find_or_initialize_with_errors(invite_key_array, attributes_hash)
           if invitable.respond_to?(:assign_attributes)
             invitable.assign_attributes(attributes, :as => inviter_role(invited_by)) 
+            invitable.invited_by = invited_by
           else
-            invitable.attributes = attributes #TODO this drops the role as above due to DataMapper's lack of equivalent Resource#assign_attributes
+            #TODO this drops the role as above due to DataMapper's lack of equivalent Resource#assign_attributes
+            #TODO this igores the polymorphic association due to DataMapper's lack of polymorphism
+            invitable.attributes = attributes 
           end
-          invitable.invited_by = invited_by
 
           invitable.skip_password = true
           invitable.valid? if self.validate_on_invite
