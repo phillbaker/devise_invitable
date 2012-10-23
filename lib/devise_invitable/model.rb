@@ -230,7 +230,11 @@ module Devise
           end
 
           invitable = find_or_initialize_with_errors(invite_key_array, attributes_hash)
-          invitable.assign_attributes(attributes, :as => inviter_role(invited_by))
+          if invitable.respond_to?(:assign_attributes)
+            invitable.assign_attributes(attributes, :as => inviter_role(invited_by)) 
+          else
+            invitable.attributes = attributes #TODO this drops the role as above due to DataMapper's lack of equivalent Resource#assign_attributes
+          end
           invitable.invited_by = invited_by
 
           invitable.skip_password = true
