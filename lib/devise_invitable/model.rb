@@ -123,7 +123,7 @@ module Devise
 
         # Required to workaround confirmable model's confirmation_required? method
         # being implemented to check for non-nil value of confirmed_at
-        if self.new_record? && self.respond_to?(:confirmation_required?)
+        if ((self.respond_to?(:new_record?) && self.new_record?) || (self.respond_to?(:new?) && self.new?)) && self.respond_to?(:confirmation_required?)
           def self.confirmation_required?; false; end
         end
 
@@ -132,11 +132,11 @@ module Devise
         self.invited_by = invited_by if invited_by
 
         # Call these before_validate methods since we aren't validating on save
-        self.downcase_keys if self.new_record? && self.respond_to?(:downcase_keys)
-        self.strip_whitespace if self.new_record? && self.respond_to?(:strip_whitespace)
+        self.downcase_keys if ((self.respond_to?(:new_record?) && self.new_record?) || (self.respond_to?(:new?) && self.new?)) && self.respond_to?(:downcase_keys)
+        self.strip_whitespace if ((self.respond_to?(:new_record?) && self.new_record?) || (self.respond_to?(:new?) && self.new?)) && self.respond_to?(:strip_whitespace)
 
-        if save(:validate => false)
-          self.invited_by.decrement_invitation_limit! if !was_invited and self.invited_by.present?
+        if save(:validate => false) #TODO for DM
+          self.invited_by.decrement_invitation_limit! if !was_invited && self.respond_to?(:invited_by) && self.invited_by.present?
           deliver_invitation unless @skip_invitation
         end
       end
@@ -241,7 +241,7 @@ module Devise
 
           invitable.skip_password = true
           invitable.valid? if self.validate_on_invite
-          if invitable.new_record?
+          if (invitable.respond_to?(:new_record?) && invitable.new_record?) || (invitable.respond_to?(:new?) && invitable.new?)
             invitable.errors.clear if !self.validate_on_invite and invitable.invite_key_valid?
           elsif !invitable.invited_to_sign_up? || !self.resend_invitation
             invite_key_array.each do |key|
